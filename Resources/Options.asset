@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed3d08b5e3864d94884d1a3e6c079f54, type: 3}
+  m_Name: Options
+  m_EditorClassIdentifier: 
+  playerColor: {r: 0.5686275, g: 1, b: 1, a: 1}
+  enemyColor: {r: 1, g: 0.76862746, b: 0.6745098, a: 1}
+  icons:
+  - type: 35
+    sprite: {fileID: 21300000, guid: 6bab6fe5b385a0046a5b9111b53fdbff, type: 3}
+  - type: 62
+    sprite: {fileID: 21300000, guid: e34788cf0fd07384883feaa103a9a0ee, type: 3}
+  - type: 60
+    sprite: {fileID: 21300000, guid: b3e6cbee5e8310f45a7dcea36b28cf3e, type: 3}
+  dotSpawnCooldown: 6
+  maxReachableDistanceBetweenDots: 270
+  dotSpinSpeed: 200
+  unitMoveUpdatesCount: 40
+  unitMoveCountKf: 3

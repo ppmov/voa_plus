@@ -2,24 +2,33 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Library;
+using UnityEngine.UI;
 
 // draw lines between dots
 [ExecuteInEditMode]
 public class LineDrawer : MonoBehaviour
 {
     [SerializeField]
-    private float _lineWidth = 5f;
+    private GameObject linePrefab;
     [SerializeField]
-    private GameObject _linePrefab;
+    private float lineWidth = 5f;
+    [SerializeField]
+    private Color lineColor;
 
-    private RectTransform _rect;
+    private RectTransform rect;
 
     private List<Vector2> DotPositions { get; set; }
     private List<RectTransform> Lines { get; set; }
 
     private void Start()
     {
-        _rect = GetComponent<RectTransform>();
+        rect = GetComponent<RectTransform>();
+        RectTransform[] lost = GetComponentsInChildren<RectTransform>();
+
+        for (int i = 0; i < lost.Length; i++)
+            if (lost[i] != rect)
+                DestroyImmediate(lost[i].gameObject);
+
         DotPositions = new List<Vector2>();
         IDotContainer container = GetComponentInParent<IDotContainer>();
 
@@ -47,12 +56,13 @@ public class LineDrawer : MonoBehaviour
             if (line.anchoredPosition == center)
                 return;
 
-        Lines.Add(Instantiate(_linePrefab, 
+        Lines.Add(Instantiate(linePrefab, 
                               Vector3.zero, 
                               Quaternion.AngleAxis(angle, Vector3.forward), 
-                              _rect).GetComponent<RectTransform>());
+                              rect).GetComponent<RectTransform>());
 
         Lines[Lines.Count - 1].anchoredPosition = center;
-        Lines[Lines.Count - 1].sizeDelta = new Vector2(Lines[Lines.Count - 1].sizeDelta.x, _lineWidth);
+        Lines[Lines.Count - 1].sizeDelta = new Vector2(Lines[Lines.Count - 1].sizeDelta.x, lineWidth);
+        Lines[Lines.Count - 1].GetComponent<Image>().color = lineColor;
     }
 }

@@ -1,13 +1,13 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Library;
-using UnityEngine.UI;
 
 public class RulesWindow : MonoBehaviour
 {
     private enum Phase { Nothing, Destroy, Pause }
 
+    [SerializeField]
+    private RectTransform container;
     [SerializeField]
     private GameObject _element;
     [SerializeField]
@@ -16,6 +16,8 @@ public class RulesWindow : MonoBehaviour
     private float _moveSpeed = 50f;
     [SerializeField]
     private Vector2 _maxSpawnPosition;
+    [SerializeField]
+    private TurnSwitcher _turnManager;
 
     private Phase Current { get; set; } = Phase.Nothing;
     private List<Unit> Units { get; set; } = new List<Unit>(6);
@@ -23,6 +25,7 @@ public class RulesWindow : MonoBehaviour
     private List<RectTransform> Operators { get; set; } = new List<RectTransform>(3);
     private List<Vector2> SpawnPositions { get; set; } = new List<Vector2>(6);
 
+    private float initialTrailTime = 0;
     private float DestroyPlace { get => 0.3f * _maxSpawnPosition.x; }
     private float PausePlace { get => 0.4f * _maxSpawnPosition.x; }
 
@@ -30,8 +33,16 @@ public class RulesWindow : MonoBehaviour
     {
         ClearAll();
 
-        // draw unit fight only if there are no typed dots or initial units on a level
-        List<Type> types = LevelManager.GetCurrentLevelDotTypes();
+        List<Type> types = new List<Type>()
+        {
+            Type.Paper,
+            Type.Rock,
+            Type.Scissors
+        };
+
+        // draw unit fight if there are different typed dots or units on a level
+        types = _turnManager.GetCurrentLevelDotTypes();
+
         int j = 0;
 
         for (int i = 0; i < 6; i += 2)
@@ -50,6 +61,7 @@ public class RulesWindow : MonoBehaviour
                 }
             }
 
+        UpdateColors();
         SwitchPhase();
 
         static Type GetType(int i) => i switch
@@ -74,6 +86,11 @@ public class RulesWindow : MonoBehaviour
         AddSpawn(1, 1);
     }
 
+    private void Start()
+    {
+        _turnManager.OnTurnSwitched.AddListener(UpdateColors);
+    }
+
     private void FixedUpdate()
     {
         bool noOneStayed = true;
@@ -88,7 +105,13 @@ public class RulesWindow : MonoBehaviour
                 continue;
 
             noOneStayed = false;
-            unit.Position += _moveSpeed / (unit.Direction.x > 0f ? 1f : 2f) * Time.fixedDeltaTime * unit.Direction;
+            float scaledMoveSpeed = _moveSpeed;
+            
+            // strongest units should move faster on first phase
+            if (Current == Phase.Pause || unit.Direction.x < 0)
+                scaledMoveSpeed /= 2f;
+
+            unit.Position += scaledMoveSpeed * Time.fixedDeltaTime * unit.Direction;
             TryFinishMoving(unit);
         }
 
@@ -115,6 +138,19 @@ public class RulesWindow : MonoBehaviour
                     rect.gameObject.SetActive(true);
                 break;
         }
+    }
+
+    private void UpdateColors()
+    {
+        Color color = Settings.GetColor(_turnManager.Player);
+
+        foreach (Unit unit in Units)
+            if (unit != null)
+                unit.Color = unit.Direction.x > 0 ? color : Color.white;
+
+        foreach (Unit unit in Stopped)
+            if (unit != null)
+                unit.Color = unit.Direction.x > 0 ? color : Color.white;
     }
 
     private void ClearAll()
@@ -170,11 +206,15 @@ public class RulesWindow : MonoBehaviour
 
     private Unit CreateUnit(Vector2 spawn, Type type)
     {
-        Unit unit = Instantiate(_element, transform).GetComponent<Unit>();
+        Unit unit = Instantiate(_element, container).GetComponent<Unit>();
         unit.Position = spawn;
         unit.LookAt(spawn * new Vector2(-1, 1));
         unit.Trail.time += 0.3f;
         unit.Type = type;
+
+        if (initialTrailTime == 0)
+            initialTrailTime = unit.Trail.time;
+
         return unit;
     }
 
@@ -184,6 +224,6 @@ public class RulesWindow : MonoBehaviour
             return;
         
         Stopped.Add(unit);
-        unit.Trail.enabled = false;
+        unit.Trail.time = Mathf.Infinity;
     }
 }
